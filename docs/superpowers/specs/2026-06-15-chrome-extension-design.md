@@ -159,6 +159,28 @@ LeetCode에서 제공하는 starterCode 그대로 저장.
 Code Review 섹션은 Groq API(`llama-3.3-70b-versatile`)로 생성하며 한국어로 작성된다.  
 리뷰 항목: 시간 복잡도, 공간 복잡도, 풀이 접근법, 잘된 점, 개선 사항.
 
+Groq 프롬프트 구조:
+```
+You are an expert software engineer reviewing a LeetCode solution.
+IMPORTANT: You MUST write the entire review in Korean (한국어).
+
+Problem: {slug}
+Difficulty: {difficulty}
+Tags: {tags}
+Language: {lang}
+
+```{lang}
+{code}
+```
+
+Please write a concise code review in Korean covering:
+1. **시간 복잡도** — Big-O 표기와 설명
+2. **공간 복잡도** — Big-O 표기와 설명
+3. **풀이 접근법** — 사용된 알고리즘/패턴 간단 설명
+4. **잘된 점** — 코드에서 잘 구현된 부분
+5. **개선 사항** — 최적화 가능한 부분이나 대안적 접근법 (있는 경우)
+```
+
 ---
 
 ## User Settings
