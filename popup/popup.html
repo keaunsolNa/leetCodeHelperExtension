@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>LeetCode Helper</title>
+  <style>
+    body { width: 280px; padding: 16px; font-family: sans-serif; margin: 0; }
+    h2 { font-size: 1rem; margin: 0 0 12px; }
+    #statusBox {
+      padding: 12px; border-radius: 6px; font-size: 0.85rem;
+      line-height: 1.5; background: #f3f4f6; color: #374151;
+      word-break: break-all;
+    }
+    #statusBox.success { background: #d1fae5; color: #065f46; }
+    #statusBox.error   { background: #fee2e2; color: #991b1b; }
+    #statusBox.skip    { background: #fef3c7; color: #92400e; }
+    #ts { font-size: 0.75rem; color: #9ca3af; margin-top: 6px; }
+    #optionsLink { display: block; margin-top: 12px; font-size: 0.8rem; color: #2563eb; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>LeetCode Helper</h2>
+  <div id="statusBox">대기 중...</div>
+  <div id="ts"></div>
+  <a id="optionsLink">⚙️ 설정 열기</a>
+  <script src="popup.js"></script>
+</body>
+</html>
