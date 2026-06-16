@@ -72,12 +72,10 @@ async function getFileInfo(owner, repo, filePath, token) {
 
 async function createFile(owner, repo, filePath, content, message, token) {
   const encoded = btoa(unescape(encodeURIComponent(content)));
-  await githubRequest(
-    'PUT',
-    `/repos/${owner}/${repo}/contents/${filePath}`,
-    { message, content: encoded },
-    token
-  );
+  const existing = await getFileInfo(owner, repo, filePath, token);
+  const body = { message, content: encoded };
+  if (existing?.sha) body.sha = existing.sha;
+  await githubRequest('PUT', `/repos/${owner}/${repo}/contents/${filePath}`, body, token);
 }
 
 async function deleteFile(owner, repo, filePath, sha, message, token) {
@@ -230,13 +228,6 @@ async function handleSubmissionAccepted(msg) {
   const diffFolder = DIFFICULTY_FOLDER[msg.difficulty] || 'Easy';
   const base = basePath ? `${basePath}/` : '';
   const solvedBase = `${base}Solved/${diffFolder}/${dir}`;
-  const analysisPath = `${solvedBase}/analysis.md`;
-
-  const existing = await getFileInfo(githubOwner, githubRepo, analysisPath, githubToken);
-  if (existing) {
-    sendStatusUpdate('skip', `이미 존재: Solved/${diffFolder}/${dir}`);
-    return;
-  }
 
   let review = '코드 분석 실패';
   if (groqApiKey) {
