@@ -1,5 +1,7 @@
 // background/background.js
 
+const DIFFICULTY_FOLDER = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard' };
+
 const LANG_EXT = {
   java: 'java',
   python3: 'py',
@@ -217,40 +219,6 @@ function sendStatusUpdate(status, message) {
   chrome.runtime.sendMessage(payload).catch(() => {});
 }
 
-async function handleProblemOpened(msg) {
-  const { githubToken, githubOwner, githubRepo, basePath } = await getSettings();
-  if (!githubToken || !githubOwner || !githubRepo) {
-    sendStatusUpdate('error', '설정 미완료 — 옵션 페이지에서 GitHub 정보를 입력하세요.');
-    return;
-  }
-
-  const dir = dirName(msg.id, msg.slug);
-  const base = basePath ? `${basePath}/` : '';
-  const problemPath = `${base}UnSolved/${dir}/problem.md`;
-
-  const existing = await getFileInfo(githubOwner, githubRepo, problemPath, githubToken);
-  if (existing) {
-    sendStatusUpdate('skip', `이미 존재: UnSolved/${dir}`);
-    return;
-  }
-
-  const ext = getExt(msg.lang);
-  await createFile(
-    githubOwner, githubRepo, problemPath,
-    buildProblemMd(msg),
-    `docs: add problem ${dir}`,
-    githubToken
-  );
-  await createFile(
-    githubOwner, githubRepo, `${base}UnSolved/${dir}/Solution.${ext}`,
-    msg.starterCode || '',
-    `feat: add starter solution ${dir}`,
-    githubToken
-  );
-
-  sendStatusUpdate('success', `UnSolved 생성: ${dir}`);
-}
-
 async function handleSubmissionAccepted(msg) {
   const { githubToken, githubOwner, githubRepo, basePath, groqApiKey } = await getSettings();
   if (!githubToken || !githubOwner || !githubRepo) {
@@ -259,12 +227,14 @@ async function handleSubmissionAccepted(msg) {
   }
 
   const dir = dirName(msg.id, msg.slug);
+  const diffFolder = DIFFICULTY_FOLDER[msg.difficulty] || 'Easy';
   const base = basePath ? `${basePath}/` : '';
-  const analysisPath = `${base}Solved/${dir}/analysis.md`;
+  const solvedBase = `${base}Solved/${diffFolder}/${dir}`;
+  const analysisPath = `${solvedBase}/analysis.md`;
 
   const existing = await getFileInfo(githubOwner, githubRepo, analysisPath, githubToken);
   if (existing) {
-    sendStatusUpdate('skip', `이미 Solved 존재: ${dir}`);
+    sendStatusUpdate('skip', `이미 존재: Solved/${diffFolder}/${dir}`);
     return;
   }
 
@@ -277,37 +247,23 @@ async function handleSubmissionAccepted(msg) {
 
   const ext = getExt(msg.lang);
   await createFile(
-    githubOwner, githubRepo, `${base}Solved/${dir}/problem.md`,
+    githubOwner, githubRepo, `${solvedBase}/problem.md`,
     buildProblemMd(msg), `docs: solved problem ${dir}`, githubToken
   );
   await createFile(
-    githubOwner, githubRepo, `${base}Solved/${dir}/Solution.${ext}`,
+    githubOwner, githubRepo, `${solvedBase}/Solution.${ext}`,
     buildSolutionContent(msg), `feat: solved ${dir}`, githubToken
   );
   await createFile(
-    githubOwner, githubRepo, `${base}Solved/${dir}/analysis.md`,
+    githubOwner, githubRepo, `${solvedBase}/analysis.md`,
     buildAnalysisMd(msg, review), `docs: add analysis ${dir}`, githubToken
   );
 
-  for (const filename of [`problem.md`, `Solution.${ext}`]) {
-    const info = await getFileInfo(
-      githubOwner, githubRepo, `${base}UnSolved/${dir}/${filename}`, githubToken
-    );
-    if (info?.sha) {
-      await deleteFile(
-        githubOwner, githubRepo, `${base}UnSolved/${dir}/${filename}`,
-        info.sha, `cleanup: remove unsolved ${dir}`, githubToken
-      ).catch(() => {});
-    }
-  }
-
-  sendStatusUpdate('success', `Solved push 완료: ${dir}`);
+  sendStatusUpdate('success', `Solved push 완료: ${diffFolder}/${dir}`);
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.type === 'PROBLEM_OPENED') {
-    handleProblemOpened(msg).catch((err) => sendStatusUpdate('error', err.message));
-  } else if (msg.type === 'SUBMISSION_ACCEPTED') {
+  if (msg.type === 'SUBMISSION_ACCEPTED') {
     handleSubmissionAccepted(msg).catch((err) => sendStatusUpdate('error', err.message));
   }
   sendResponse({ ok: true });

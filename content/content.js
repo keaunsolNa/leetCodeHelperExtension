@@ -10,7 +10,6 @@ window.addEventListener('message', (e) => {
 
   if (type === 'QUESTION_DATA') {
     storedProblem = payload;
-    chrome.runtime.sendMessage({ type: 'PROBLEM_OPENED', ...payload });
   } else if (type === 'SUBMISSION_DETAILS') {
     if (payload.statusMsg !== 'Accepted') return;
     chrome.runtime.sendMessage({
