@@ -1,5 +1,22 @@
 // Runs in MAIN world — NO chrome APIs
 
+let questionSent = false;
+
+// Primary: read problem data from __NEXT_DATA__ (available at DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const queries = window.__NEXT_DATA__?.props?.pageProps?.dehydratedState?.queries;
+    if (!queries) return;
+
+    const q = queries.find((entry) => entry?.state?.data?.question?.titleSlug)
+                     ?.state?.data?.question;
+    if (!q) return;
+
+    sendQuestionData(q);
+  } catch (_) {}
+});
+
+// Fallback + submission detection via fetch hook
 const _fetch = window.fetch.bind(window);
 
 window.fetch = async function (...args) {
@@ -8,35 +25,11 @@ window.fetch = async function (...args) {
 
   if (typeof url === 'string' && url.includes('/graphql')) {
     try {
-      const body = options?.body ? JSON.parse(options.body) : null;
-      const opName = body?.operationName;
       const clone = response.clone();
       const json = await clone.json();
 
-      if (opName === 'questionData' && json?.data?.question) {
-        const q = json.data.question;
-        const langSlug = readLang();
-        const snippet =
-          (q.codeSnippets || []).find((s) => s.langSlug === langSlug) ||
-          (q.codeSnippets || [])[0] ||
-          {};
-        window.postMessage(
-          {
-            source: 'lc-helper',
-            type: 'QUESTION_DATA',
-            payload: {
-              id: String(q.questionFrontendId || q.questionId || '0').replace(/\D/g, ''),
-              slug: q.titleSlug || '',
-              title: q.title || '',
-              difficulty: q.difficulty || '',
-              tags: (q.topicTags || []).map((t) => t.name).join(', '),
-              content: q.content || '',
-              lang: snippet.langSlug || langSlug,
-              starterCode: snippet.code || '',
-            },
-          },
-          '*'
-        );
+      if (!questionSent && json?.data?.question?.titleSlug) {
+        sendQuestionData(json.data.question);
       } else if (json?.data?.submissionDetails) {
         const sub = json.data.submissionDetails;
         window.postMessage(
@@ -61,6 +54,32 @@ window.fetch = async function (...args) {
 
   return response;
 };
+
+function sendQuestionData(q) {
+  questionSent = true;
+  const langSlug = readLang();
+  const snippet =
+    (q.codeSnippets || []).find((s) => s.langSlug === langSlug) ||
+    (q.codeSnippets || [])[0] ||
+    {};
+  window.postMessage(
+    {
+      source: 'lc-helper',
+      type: 'QUESTION_DATA',
+      payload: {
+        id: String(q.questionFrontendId || q.questionId || '0').replace(/\D/g, ''),
+        slug: q.titleSlug || '',
+        title: q.title || '',
+        difficulty: q.difficulty || '',
+        tags: (q.topicTags || []).map((t) => t.name).join(', '),
+        content: q.content || '',
+        lang: snippet.langSlug || langSlug,
+        starterCode: snippet.code || '',
+      },
+    },
+    '*'
+  );
+}
 
 function readLang() {
   try {
