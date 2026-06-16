@@ -16,44 +16,68 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (_) {}
 });
 
-// Fallback + submission detection via fetch hook
+// Submission detection via fetch hook
 const _fetch = window.fetch.bind(window);
 
 window.fetch = async function (...args) {
   const [url, options] = args;
   const response = await _fetch(...args);
 
-  if (typeof url === 'string' && url.includes('/graphql')) {
-    try {
-      const clone = response.clone();
-      const json = await clone.json();
+  if (typeof url !== 'string') return response;
 
+  try {
+    const clone = response.clone();
+    const json = await clone.json();
+
+    if (url.includes('/graphql')) {
+      // GraphQL: question data fallback
       if (!questionSent && json?.data?.question?.titleSlug) {
         sendQuestionData(json.data.question);
-      } else if (json?.data?.submissionDetails) {
-        const sub = json.data.submissionDetails;
-        window.postMessage(
-          {
-            source: 'lc-helper',
-            type: 'SUBMISSION_DETAILS',
-            payload: {
-              statusMsg: sub.statusMsg || '',
-              lang: sub.lang?.name || 'java',
-              code: sub.code || '',
-              runtimeDisplay: sub.runtimeDisplay || '',
-              runtimePercentile: sub.runtimePercentile || 0,
-              memoryDisplay: sub.memoryDisplay || '',
-              memoryPercentile: sub.memoryPercentile || 0,
-            },
-          },
-          '*'
-        );
       }
-    } catch (_) {}
-  }
+      // GraphQL: submissionDetails (일부 환경에서 사용)
+      else if (json?.data?.submissionDetails) {
+        const sub = json.data.submissionDetails;
+        if (sub.statusMsg === 'Accepted') {
+          postSubmission({
+            lang: sub.lang?.name || 'java',
+            code: sub.code || readEditorCode(),
+            runtimeDisplay: sub.runtimeDisplay || '',
+            runtimePercentile: sub.runtimePercentile || 0,
+            memoryDisplay: sub.memoryDisplay || '',
+            memoryPercentile: sub.memoryPercentile || 0,
+          });
+        }
+      }
+    } else if (url.includes('/check') && json?.state === 'SUCCESS') {
+      // REST 폴링: /submissions/detail/{id}/check/
+      if (json.status_msg === 'Accepted') {
+        postSubmission({
+          lang: json.lang || 'java',
+          code: readEditorCode(),
+          runtimeDisplay: json.status_runtime || '',
+          runtimePercentile: json.runtime_percentile || 0,
+          memoryDisplay: json.status_memory || '',
+          memoryPercentile: json.memory_percentile || 0,
+        });
+      }
+    }
+  } catch (_) {}
 
   return response;
 };
+
+function postSubmission(payload) {
+  window.postMessage({ source: 'lc-helper', type: 'SUBMISSION_DETAILS', payload }, '*');
+}
+
+function readEditorCode() {
+  try {
+    const editors = window.monaco?.editor?.getEditors?.() || [];
+    return editors[0]?.getValue?.() || '';
+  } catch (_) {
+    return '';
+  }
+}
 
 function sendQuestionData(q) {
   questionSent = true;
