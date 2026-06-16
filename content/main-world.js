@@ -67,7 +67,10 @@ window.fetch = async function (...args) {
 };
 
 function postSubmission(payload) {
-  window.postMessage({ source: 'lc-helper', type: 'SUBMISSION_DETAILS', payload }, '*');
+  window.postMessage(
+    { source: 'lc-helper', type: 'SUBMISSION_DETAILS', payload: { statusMsg: 'Accepted', ...payload } },
+    '*'
+  );
 }
 
 function readEditorCode() {
