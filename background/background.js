@@ -70,12 +70,24 @@ async function getFileInfo(owner, repo, filePath, token) {
   return status === 200 ? data : null;
 }
 
+// GitHub Contents API가 돌려주는 base64(60자마다 개행 포함)를 UTF-8 문자열로 복원.
+// 쓰기 시 btoa(unescape(encodeURIComponent(x)))의 역연산.
+function decodeGithubContent(b64) {
+  return decodeURIComponent(escape(atob(b64.replace(/\s/g, ''))));
+}
+
+// 내용이 기존 파일과 동일하면 PUT을 생략해 빈 커밋을 만들지 않는다.
+// 실제로 커밋을 만든 경우 true, 변경 없어 건너뛴 경우 false를 반환한다.
 async function createFile(owner, repo, filePath, content, message, token) {
-  const encoded = btoa(unescape(encodeURIComponent(content)));
   const existing = await getFileInfo(owner, repo, filePath, token);
+  if (existing?.content && decodeGithubContent(existing.content) === content) {
+    return false;
+  }
+  const encoded = btoa(unescape(encodeURIComponent(content)));
   const body = { message, content: encoded };
   if (existing?.sha) body.sha = existing.sha;
   await githubRequest('PUT', `/repos/${owner}/${repo}/contents/${filePath}`, body, token);
+  return true;
 }
 
 async function deleteFile(owner, repo, filePath, sha, message, token) {
@@ -229,28 +241,42 @@ async function handleSubmissionAccepted(msg) {
   const base = basePath ? `${basePath}/` : '';
   const solvedBase = `${base}Solved/${diffFolder}/${dir}`;
 
-  let review = '코드 분석 실패';
-  if (groqApiKey) {
-    try {
-      review = await callGroqApi(msg, groqApiKey);
-    } catch (_) {}
-  }
-
   const ext = getExt(msg.lang);
-  await createFile(
+  const problemWritten = await createFile(
     githubOwner, githubRepo, `${solvedBase}/problem.md`,
     buildProblemMd(msg), `docs: solved problem ${dir}`, githubToken
   );
-  await createFile(
+  const solutionWritten = await createFile(
     githubOwner, githubRepo, `${solvedBase}/Solution.${ext}`,
     buildSolutionContent(msg), `feat: solved ${dir}`, githubToken
   );
-  await createFile(
-    githubOwner, githubRepo, `${solvedBase}/analysis.md`,
-    buildAnalysisMd(msg, review), `docs: add analysis ${dir}`, githubToken
-  );
 
-  sendStatusUpdate('success', `Solved push 완료: ${diffFolder}/${dir}`);
+  // analysis.md는 제출 타임스탬프와 LLM 리뷰(비결정적)를 담아 매 제출마다 내용이
+  // 달라진다. 따라서 무조건 재생성하면 동일 재제출에도 끝없이 커밋이 쌓인다.
+  // 풀이가 실제로 바뀌었을 때(또는 분석 파일이 아직 없을 때)만 재생성·커밋한다.
+  const analysisPath = `${solvedBase}/analysis.md`;
+  const analysisExists = await getFileInfo(githubOwner, githubRepo, analysisPath, githubToken);
+  let analysisWritten = false;
+  if (solutionWritten || !analysisExists) {
+    let review = '코드 분석 실패';
+    if (groqApiKey) {
+      try {
+        review = await callGroqApi(msg, groqApiKey);
+      } catch (_) {}
+    }
+    analysisWritten = await createFile(
+      githubOwner, githubRepo, analysisPath,
+      buildAnalysisMd(msg, review), `docs: add analysis ${dir}`, githubToken
+    );
+  }
+
+  const wrote = problemWritten || solutionWritten || analysisWritten;
+  sendStatusUpdate(
+    'success',
+    wrote
+      ? `Solved push 완료: ${diffFolder}/${dir}`
+      : `변경 없음 — 건너뜀: ${diffFolder}/${dir}`
+  );
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
