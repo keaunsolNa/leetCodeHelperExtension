@@ -7,6 +7,16 @@ const DIFFICULTY_FOLDER = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard' };
 // llama-3.3-70b-versatile은 2026-08-16 종료되어 gpt-oss-120b로 교체했다.
 const GROQ_MODEL = 'openai/gpt-oss-120b';
 
+// Groq 무료 티어는 분당 토큰(TPM) 한도가 8,000이고, 요청 시점에 프롬프트 +
+// max_completion_tokens 전체를 미리 예약해 차감한다. 리뷰 본문은 길어야 1.5k
+// 토큰이라 2,048이면 충분하고, 한도를 덜 잡아야 연속 제출이 429를 덜 맞는다.
+const GROQ_MAX_COMPLETION_TOKENS = 2048;
+
+// 429는 잠깐 기다리면 풀리므로 재시도한다. MV3 서비스 워커는 유휴 30초면
+// 종료될 수 있어 대기는 그보다 짧게 자른다.
+const GROQ_MAX_RETRIES = 3;
+const GROQ_MAX_WAIT_MS = 25000;
+
 // 분석 실패로 남은 analysis.md를 다음 제출 때 알아보고 재생성하기 위한 표식.
 const ANALYSIS_FAILED_MARKER = '분석 실패';
 
@@ -210,7 +220,7 @@ async function callGroqApi({ slug, difficulty, tags, lang, code }, groqApiKey) {
     '5. **개선 사항** — 최적화 가능한 부분이나 대안적 접근법 (있는 경우)',
   ].join('\n');
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const request = {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${groqApiKey}`,
@@ -220,20 +230,48 @@ async function callGroqApi({ slug, difficulty, tags, lang, code }, groqApiKey) {
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      // gpt-oss 계열은 reasoning 토큰도 출력 한도를 소모하므로 넉넉히 잡는다.
-      max_completion_tokens: 4096,
+      // gpt-oss 계열은 reasoning 토큰도 출력 한도를 소모하므로 여유를 둔다.
+      max_completion_tokens: GROQ_MAX_COMPLETION_TOKENS,
       reasoning_effort: 'low',
     }),
-  });
+  };
 
-  if (!res.ok) {
+  let lastError;
+  for (let attempt = 0; attempt <= GROQ_MAX_RETRIES; attempt++) {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', request);
+
+    if (res.ok) {
+      const json = await res.json();
+      const content = json.choices?.[0]?.message?.content?.trim();
+      if (!content) throw new Error(`Groq ${GROQ_MODEL}: 빈 응답`);
+      return content;
+    }
+
     const detail = await res.text().catch(() => '');
-    throw new Error(`Groq ${res.status} (${GROQ_MODEL}): ${detail.slice(0, 300)}`);
+    lastError = new Error(`Groq ${res.status} (${GROQ_MODEL}): ${detail.slice(0, 300)}`);
+
+    // 429 외의 오류(401 키 문제, 404 모델 폐기 등)는 기다려도 풀리지 않는다.
+    if (res.status !== 429 || attempt === GROQ_MAX_RETRIES) throw lastError;
+
+    const waitMs = groqRetryDelayMs(res, detail, attempt);
+    console.warn(`[lc-helper] Groq 429 — ${waitMs}ms 후 재시도 (${attempt + 1}/${GROQ_MAX_RETRIES})`);
+    await sleep(waitMs);
   }
-  const json = await res.json();
-  const content = json.choices?.[0]?.message?.content?.trim();
-  if (!content) throw new Error(`Groq ${GROQ_MODEL}: 빈 응답`);
-  return content;
+  throw lastError;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Groq는 retry-after 헤더로, 없으면 에러 메시지의 "try again in 3.105s"로
+// 대기 시간을 알려준다. 둘 다 없을 때만 지수 백오프로 물러선다.
+function groqRetryDelayMs(res, detail, attempt) {
+  const header = Number(res.headers.get('retry-after'));
+  const fromBody = detail.match(/try again in ([\d.]+)s/i);
+  const seconds = header > 0 ? header : fromBody ? Number(fromBody[1]) : 2 ** attempt;
+  // 알려준 시각 직후에 다시 쏘면 또 걸리므로 1초 여유를 둔다.
+  return Math.min((seconds + 1) * 1000, GROQ_MAX_WAIT_MS);
 }
 
 // ── Message Handlers ─────────────────────────────────────────────────────────
