@@ -2,6 +2,14 @@
 
 const DIFFICULTY_FOLDER = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard' };
 
+// Groq 모델은 주기적으로 폐기(decommission)된다. 폐기된 ID로 호출하면 404가 나고
+// 리뷰가 통째로 실패하므로, 여기 한 곳만 바꾸면 되도록 상수로 분리한다.
+// llama-3.3-70b-versatile은 2026-08-16 종료되어 gpt-oss-120b로 교체했다.
+const GROQ_MODEL = 'openai/gpt-oss-120b';
+
+// 분석 실패로 남은 analysis.md를 다음 제출 때 알아보고 재생성하기 위한 표식.
+const ANALYSIS_FAILED_MARKER = '분석 실패';
+
 const LANG_EXT = {
   java: 'java',
   python3: 'py',
@@ -209,16 +217,23 @@ async function callGroqApi({ slug, difficulty, tags, lang, code }, groqApiKey) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 1024,
+      // gpt-oss 계열은 reasoning 토큰도 출력 한도를 소모하므로 넉넉히 잡는다.
+      max_completion_tokens: 4096,
+      reasoning_effort: 'low',
     }),
   });
 
-  if (!res.ok) throw new Error(`Groq ${res.status}`);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Groq ${res.status} (${GROQ_MODEL}): ${detail.slice(0, 300)}`);
+  }
   const json = await res.json();
-  return json.choices?.[0]?.message?.content || '코드 분석 실패';
+  const content = json.choices?.[0]?.message?.content?.trim();
+  if (!content) throw new Error(`Groq ${GROQ_MODEL}: 빈 응답`);
+  return content;
 }
 
 // ── Message Handlers ─────────────────────────────────────────────────────────
@@ -256,13 +271,28 @@ async function handleSubmissionAccepted(msg) {
   // 풀이가 실제로 바뀌었을 때(또는 분석 파일이 아직 없을 때)만 재생성·커밋한다.
   const analysisPath = `${solvedBase}/analysis.md`;
   const analysisExists = await getFileInfo(githubOwner, githubRepo, analysisPath, githubToken);
+  // 이전 분석이 실패로 남아 있으면 코드가 그대로여도 다시 시도한다.
+  const analysisFailedBefore =
+    !!analysisExists?.content &&
+    decodeGithubContent(analysisExists.content).includes(ANALYSIS_FAILED_MARKER);
+
   let analysisWritten = false;
-  if (solutionWritten || !analysisExists) {
-    let review = '코드 분석 실패';
+  let analysisError = null;
+  if (solutionWritten || !analysisExists || analysisFailedBefore) {
+    let review;
     if (groqApiKey) {
       try {
         review = await callGroqApi(msg, groqApiKey);
-      } catch (_) {}
+      } catch (err) {
+        analysisError = err.message;
+      }
+    } else {
+      analysisError = 'Groq API Key 미설정 — 옵션 페이지에서 입력하세요.';
+    }
+    // 실패 원인을 파일에 남겨야 다음에 왜 비었는지 추적할 수 있다.
+    if (!review) {
+      console.error('[lc-helper] Groq 분석 실패:', analysisError);
+      review = `> ⚠️ 코드 ${ANALYSIS_FAILED_MARKER}: ${analysisError}`;
     }
     analysisWritten = await createFile(
       githubOwner, githubRepo, analysisPath,
@@ -271,6 +301,10 @@ async function handleSubmissionAccepted(msg) {
   }
 
   const wrote = problemWritten || solutionWritten || analysisWritten;
+  if (analysisError) {
+    sendStatusUpdate('error', `분석 실패 (파일은 푸시됨): ${analysisError}`);
+    return;
+  }
   sendStatusUpdate(
     'success',
     wrote
