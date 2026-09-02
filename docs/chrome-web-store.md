@@ -13,6 +13,7 @@
 | 개인정보처리방침 URL 확보 | `PRIVACY.md`를 push 후 아래 URL 사용 |
 | 스크린샷 1장 이상 | 1280×800 (또는 640×400) PNG/JPEG |
 | 배포용 zip 생성 | `powershell -File tools/package.ps1` |
+| 확장 ID (항목 생성 시 확정) | `enciibhcobdplbeinadchlpfacnebfnh` |
 | OAuth App 등록 + Client ID 반영 | [`docs/github-oauth-app.md`](github-oauth-app.md) — 완료 |
 
 **개인정보처리방침 URL (그대로 사용 가능):**
@@ -68,6 +69,17 @@ GitHub API와 Groq API 외에는 어디로도 전송되지 않습니다. 개발�
 ■ 지원 언어
 Java, Python, JavaScript, TypeScript, C, C++, C#, Go, Ruby, Swift, Kotlin, Scala, Rust, PHP
 ```
+
+**추가 입력란**
+
+| 항목 | 값 |
+|---|---|
+| 공식 URL | `없음` (Search Console 인증 도메인이 있어야 선택 가능) |
+| 홈페이지 URL | `https://github.com/keaunsolNa/leetCodeHelperExtension` |
+| 지원 URL | `https://github.com/keaunsolNa/leetCodeHelperExtension/issues` |
+| 성인용 콘텐츠 | 끔 |
+
+지원 URL을 넣어두면 버그 제보가 스토어 리뷰(별점에 반영됨) 대신 GitHub 이슈로 온다.
 
 **카테고리**: `개발자 도구 (Developer Tools)`
 **언어**: `한국어`

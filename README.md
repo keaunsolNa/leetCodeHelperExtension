@@ -9,8 +9,9 @@ AI 한국어 코드 리뷰 3개 파일을 커밋합니다.
 
 ### 1) Chrome 웹 스토어 (권장)
 
-> 스토어 등록 후 아래 링크를 채워 넣을 것
-> `https://chrome.google.com/webstore/detail/<EXTENSION_ID>`
+<https://chromewebstore.google.com/detail/enciibhcobdplbeinadchlpfacnebfnh>
+
+> 심사 통과 후 활성화됩니다.
 
 링크로 설치하면 자동 업데이트가 되고, 같은 구글 계정으로 로그인한 다른 PC에서는
 설정값(`chrome.storage.sync`)까지 그대로 따라오므로 추가 설정이 필요 없다.
