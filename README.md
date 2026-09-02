@@ -23,13 +23,32 @@ AI 한국어 코드 리뷰 3개 파일을 커밋합니다.
 
 ## 설정
 
+익스텐션 아이콘 우클릭 → **옵션**.
+
+**1. GitHub 연결** — **"GitHub 계정으로 연결"** 버튼을 누르면 8자리 코드가 나옵니다.
+GitHub 창에 입력하고 승인하면 끝이고, 토큰을 직접 만들 필요가 없습니다.
+기본은 공개 저장소만 접근하는 `public_repo` 권한이며, 비공개 저장소에 저장하려면
+체크박스를 켜서 `repo`로 넓힙니다.
+
+> 직접 만든 Personal Access Token을 쓰고 싶다면 **"토큰 직접 입력 (고급)"**을 펼치세요.
+> Fine-grained는 `Contents: Read and write`, classic은 `repo`(또는 `public_repo`) 권한이 필요합니다.
+
+**2. 저장 위치**
+
 | 항목 | 설명 |
 |------|------|
-| GitHub Token | Personal Access Token (repo 또는 contents:write 스코프) |
-| GitHub Username | 본인 GitHub 계정명 |
-| Repository Name | 알고리즘 저장용 레포 이름 |
-| Base Path | 레포 내 기본 경로 (예: `leetcode`) |
-| Groq API Key | [console.groq.com](https://console.groq.com) 에서 발급 |
+| GitHub 사용자명 / 조직명 | 연결하면 자동으로 채워집니다 |
+| 저장소 이름 | 알고리즘 저장용 레포 (미리 만들어 두세요) |
+| 기본 경로 | 레포 내 경로 (예: `leetcode`). 비워도 됩니다 |
+
+**3. AI 코드 리뷰 — 선택**
+
+[console.groq.com](https://console.groq.com)에서 무료로 발급받은 Groq API Key를 넣으면
+`analysis.md`에 복잡도 분석과 개선 제안이 함께 저장됩니다. **비워두면 리뷰 없이**
+문제 설명과 풀이 파일만 커밋합니다.
+
+> 포크해서 직접 배포하려면 OAuth Client ID를 채워야 합니다 —
+> [`docs/github-oauth-app.md`](docs/github-oauth-app.md) 참고.
 
 ## GitHub 레포 구조
 
@@ -69,7 +88,8 @@ LeetCode 문제 페이지 진입
 - Chrome Extension Manifest V3
 - Vanilla JavaScript (ES2022+, 번들러 없음)
 - GitHub Contents API REST v3
-- Groq API (`openai/gpt-oss-120b` — 모델 ID는 `GROQ_MODEL` 상수 한 곳에서 관리)
+- Groq API — 모델이 폐기되면 `/models`로 살아 있는 모델을 찾아 자동 전환
+- GitHub OAuth Device Flow (client secret 불필요 → 서버 없음)
 
 ## 배포
 

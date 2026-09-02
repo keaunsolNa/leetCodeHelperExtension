@@ -4,35 +4,140 @@
   <meta charset="UTF-8">
   <title>LeetCode Helper Settings</title>
   <style>
-    body { font-family: sans-serif; max-width: 480px; margin: 40px auto; padding: 0 20px; }
-    h1 { font-size: 1.4rem; margin-bottom: 24px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #444; }
-    input {
-      width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
-      font-size: 0.9rem; box-sizing: border-box; margin-bottom: 16px;
+    :root { color-scheme: light; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 520px; margin: 40px auto; padding: 0 20px; color: #111827;
     }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .sub { color: #6b7280; font-size: 0.85rem; margin: 0 0 28px; }
+    section { border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 20px; margin-bottom: 18px; }
+    h2 { font-size: 0.95rem; margin: 0 0 4px; }
+    h2 .opt { font-weight: 400; color: #6b7280; font-size: 0.8rem; }
+    .desc { color: #6b7280; font-size: 0.8rem; margin: 0 0 16px; line-height: 1.5; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #374151; }
+    input[type=text], input[type=password] {
+      width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 4px;
+      font-size: 0.9rem; box-sizing: border-box; margin-bottom: 14px;
+    }
+    input:focus { outline: 2px solid #2563eb; outline-offset: -1px; border-color: #2563eb; }
     button {
-      padding: 10px 24px; background: #2563eb; color: #fff;
-      border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;
+      padding: 9px 18px; background: #2563eb; color: #fff;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 0.88rem;
     }
     button:hover { background: #1d4ed8; }
-    #status { margin-top: 12px; font-size: 0.85rem; color: #16a34a; min-height: 20px; }
+    button.ghost { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+    button.ghost:hover { background: #f9fafb; }
+    .checkline { display: flex; align-items: center; gap: 7px; font-size: 0.85rem; margin-bottom: 14px; color: #374151; }
+    .checkline input { margin: 0; }
+    details { margin-top: 16px; }
+    summary { cursor: pointer; font-size: 0.82rem; color: #6b7280; }
+    details > div { padding-top: 12px; }
+    .connected {
+      display: flex; align-items: center; gap: 10px;
+      background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+      padding: 10px 12px; border-radius: 6px; font-size: 0.88rem; margin-bottom: 12px;
+    }
+    .connected b { font-weight: 600; }
+    .connected button { margin-left: auto; padding: 5px 10px; font-size: 0.8rem; }
+    #deviceBox {
+      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;
+      padding: 16px; text-align: center; margin-top: 14px;
+    }
+    #userCode {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 1.7rem; letter-spacing: 4px; font-weight: 700;
+      margin: 10px 0 14px; user-select: all; color: #111827;
+    }
+    #deviceBox .row { display: flex; gap: 8px; justify-content: center; }
+    #pollStatus { font-size: 0.8rem; color: #6b7280; margin-top: 12px; min-height: 18px; }
+    .notice {
+      background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+      padding: 10px 12px; border-radius: 6px; font-size: 0.82rem; line-height: 1.5;
+    }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+    #saveBtn { padding: 11px 28px; font-size: 0.92rem; }
+    #status { margin-top: 12px; font-size: 0.85rem; min-height: 20px; }
+    #status.ok { color: #16a34a; }
+    #status.err { color: #dc2626; }
   </style>
 </head>
 <body>
-  <h1>LeetCode Helper Settings</h1>
-  <label for="githubToken">GitHub Personal Access Token (repo scope)</label>
-  <input type="password" id="githubToken" placeholder="ghp_..." />
-  <label for="githubOwner">GitHub Username</label>
-  <input type="text" id="githubOwner" placeholder="username" />
-  <label for="githubRepo">Repository Name</label>
-  <input type="text" id="githubRepo" placeholder="algorithm-study" />
-  <label for="basePath">Base Path in Repo</label>
-  <input type="text" id="basePath" placeholder="leetcode" />
-  <label for="groqApiKey">Groq API Key</label>
-  <input type="password" id="groqApiKey" placeholder="gsk_..." />
-  <button id="saveBtn">Save</button>
+  <h1>LeetCode Helper</h1>
+  <p class="sub">정답을 맞히면 풀이와 AI 코드 리뷰를 GitHub에 자동으로 커밋합니다.</p>
+
+  <section>
+    <h2>1. GitHub 연결</h2>
+    <p class="desc">풀이를 커밋할 권한이 필요합니다.</p>
+
+    <div id="authConnected" hidden>
+      <div class="connected">
+        <span>✅ <b id="authLogin"></b> 계정으로 연결됨</span>
+        <button type="button" class="ghost" id="disconnectBtn">연결 해제</button>
+      </div>
+    </div>
+
+    <div id="authDisconnected">
+      <div class="checkline">
+        <input type="checkbox" id="includePrivate">
+        <label for="includePrivate" style="margin:0;font-weight:400;">비공개 저장소에도 저장 (더 넓은 권한을 요청합니다)</label>
+      </div>
+      <button type="button" id="connectBtn">GitHub 계정으로 연결</button>
+      <div id="oauthUnavailable" class="notice" hidden>
+        이 빌드에는 OAuth Client ID가 설정되어 있지 않습니다. 아래 <b>토큰 직접 입력</b>을
+        사용하거나, <code>docs/github-oauth-app.md</code>를 참고해 Client ID를 채워 주세요.
+      </div>
+    </div>
+
+    <div id="deviceBox" hidden>
+      <div style="font-size:0.85rem;color:#374151;">GitHub 창에 아래 코드를 입력하세요</div>
+      <div id="userCode"></div>
+      <div class="row">
+        <button type="button" id="verifyBtn">GitHub에서 인증하기</button>
+        <button type="button" class="ghost" id="copyBtn">코드 복사</button>
+        <button type="button" class="ghost" id="cancelBtn">취소</button>
+      </div>
+      <div id="pollStatus"></div>
+    </div>
+
+    <details id="patDetails">
+      <summary>토큰 직접 입력 (고급)</summary>
+      <div>
+        <label for="githubToken">GitHub Personal Access Token</label>
+        <input type="password" id="githubToken" placeholder="ghp_... 또는 github_pat_..." autocomplete="off">
+        <p class="desc" style="margin:-6px 0 0;">
+          Fine-grained 토큰은 <code>Contents: Read and write</code>, classic 토큰은
+          <code>repo</code>(또는 공개 저장소만 쓴다면 <code>public_repo</code>) 권한이 필요합니다.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>2. 저장 위치</h2>
+    <p class="desc">풀이를 커밋할 저장소입니다. 미리 만들어 두세요.</p>
+    <label for="githubOwner">GitHub 사용자명 / 조직명</label>
+    <input type="text" id="githubOwner" placeholder="username">
+    <label for="githubRepo">저장소 이름</label>
+    <input type="text" id="githubRepo" placeholder="algorithm-study">
+    <label for="basePath">저장소 내 기본 경로 <span style="font-weight:400;color:#6b7280;">(비워도 됩니다)</span></label>
+    <input type="text" id="basePath" placeholder="leetcode">
+  </section>
+
+  <section>
+    <h2>3. AI 코드 리뷰 <span class="opt">— 선택</span></h2>
+    <p class="desc">
+      Groq API Key를 넣으면 <code>analysis.md</code>에 복잡도 분석과 개선 제안이 함께 저장됩니다.
+      <b>비워두면 리뷰 없이</b> 문제 설명과 풀이 파일만 커밋합니다.
+      키는 <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>에서 무료로 발급받을 수 있습니다.
+    </p>
+    <label for="groqApiKey">Groq API Key</label>
+    <input type="password" id="groqApiKey" placeholder="gsk_..." autocomplete="off">
+  </section>
+
+  <button id="saveBtn">저장</button>
   <div id="status"></div>
-  <script src="options.js"></script>
+
+  <script type="module" src="options.js"></script>
 </body>
 </html>

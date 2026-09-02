@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LeetCode Helper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Automatically push LeetCode solutions to GitHub",
   "icons": {
     "16": "icons/icon16.png",
@@ -13,6 +13,7 @@
   "host_permissions": [
     "https://leetcode.com/*",
     "https://api.github.com/*",
+    "https://github.com/login/*",
     "https://api.groq.com/*"
   ],
   "background": {

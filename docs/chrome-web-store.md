@@ -53,10 +53,11 @@ LeetCode 문제를 풀면 풀이 코드를 자동으로 본인 GitHub 저장소�
 · 같은 문제를 다시 제출해도 내용이 같으면 커밋하지 않아 빈 커밋이 쌓이지 않습니다.
 
 ■ 사용 전 설정
-확장 프로그램 아이콘 우클릭 → 옵션에서 아래 값을 입력하세요.
-· GitHub Personal Access Token (repo 또는 contents:write 권한)
-· GitHub 사용자명 / 저장할 레포지토리 이름 / 레포 내 기본 경로
-· Groq API Key (console.groq.com 에서 무료 발급)
+확장 프로그램 아이콘 우클릭 → 옵션에서 설정합니다.
+· GitHub 연결: 버튼을 누르고 8자리 코드를 입력하면 끝입니다. 토큰을 직접 만들 필요가 없습니다.
+  기본은 공개 저장소만 접근하는 권한이며, 비공개 저장소에 저장하려면 체크박스로 넓힐 수 있습니다.
+· 저장할 저장소 이름과 경로
+· (선택) Groq API Key — 넣으면 AI 코드 리뷰가 함께 저장되고, 비워두면 리뷰 없이 파일만 저장됩니다.
 
 ■ 개인정보
 별도의 서버를 운영하지 않습니다. 입력한 토큰과 API 키는 브라우저에만 저장되며,
@@ -104,9 +105,14 @@ The content script runs only on LeetCode problem pages. It reads the problem met
 Required to create and update the solution files in the GitHub repository that the user configured, using the user's own Personal Access Token via the GitHub Contents API.
 ```
 
+`https://github.com/login/*`
+```
+Required for the GitHub OAuth device flow, which lets the user authorize the extension without creating and pasting a Personal Access Token by hand. Only the device-code and access-token endpoints are called, using a public client ID. No client secret is used and no server is involved.
+```
+
 `https://api.groq.com/*`
 ```
-Required to generate the Korean-language code review that is saved as analysis.md. The problem description and the user's submitted code are sent to the Groq API using the user's own API key. If the user leaves the API key empty, no request is made.
+Required to generate the Korean-language code review that is saved as analysis.md. The problem description and the user's submitted code are sent to the Groq API using the user's own API key. This feature is optional: if the user leaves the API key empty, no request is ever made to Groq and the extension still saves the problem and solution files.
 ```
 
 **원격 코드 사용 (Remote code)**: `아니요, 원격 코드를 사용하지 않습니다`
