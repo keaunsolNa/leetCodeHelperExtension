@@ -72,21 +72,39 @@ Java, Python, JavaScript, TypeScript, C, C++, C#, Go, Ruby, Swift, Kotlin, Scala
 **카테고리**: `개발자 도구 (Developer Tools)`
 **언어**: `한국어`
 
-**스크린샷 소재 (권장 3장)**
-1. LeetCode 문제 페이지 + 확장 팝업에 성공 상태가 뜬 화면
-2. 옵션 설정 화면
-3. GitHub 레포의 `Solved/0001-two-sum/` 폴더 (problem.md / Solution.java / analysis.md)
+**스크린샷 소재 (권장 3장 — 순서 중요)**
+
+첫 장이 가장 크게 노출되므로 "이게 뭘 해주는지"가 한눈에 보여야 한다.
+
+1. **LeetCode 문제 페이지 + 팝업에 `push 완료` 상태** — 핵심 가치를 한 장으로
+2. **옵션 화면의 GitHub 연결됨 상태** — 토큰을 붙여넣지 않아도 된다는 게 경쟁 확장 대비 차별점
+3. **GitHub 레포의 `Solved/Med/0001-two-sum/` 폴더** — 결과물 3개 파일이 보이게
+
+바탕화면 전체가 아니라 **보여줄 영역만 잘라서** 캡처할 것. 전체 화면을 넣으면
+정작 봐야 할 UI 가 작아진다.
 
 스토어는 **1280×800 또는 640×400** 두 크기만 받는다. 아무 크기로 캡처한 뒤
 아래 스크립트를 돌리면 비율을 유지한 채 여백을 채워 규격에 맞춰 준다.
 (잘라내지 않는다 — UI 가 잘리면 심사에 불리하다.)
 
 ```powershell
+# 규격만 맞추기
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 shot1.png shot2.png
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 shot.png -Background '#1e1e1e'
+
+# 캡션 + 프레임 (권장) — 캡션은 입력 파일 순서대로 짝지어진다
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 `
+    shot1.png shot2.png shot3.png -Frame -Background '#111827' -Caption `
+    '정답을 맞히면 자동으로 GitHub에 커밋', `
+    '토큰 없이 버튼 한 번으로 GitHub 연결', `
+    'AI가 복잡도와 개선점까지 정리'
 ```
 
 결과는 `dist/store/` 에 저장된다.
+
+`-Frame` 은 캡처를 안쪽으로 물리고 둥근 모서리와 그림자를 넣는다. `-Caption` 은
+문구를 이미지에 구워 넣는다 — **스토어에는 스크린샷별 설명란이 없어서** 캡션을
+넣지 않으면 무엇을 보여 주는 화면인지 전달되지 않는다. 배경 밝기에 따라 글자색은
+자동으로 정해진다.
 
 > ⚠️ 캡처할 때 **GitHub 토큰과 Groq 키가 화면에 노출되지 않도록** 반드시 가릴 것.
 
