@@ -50,7 +50,17 @@ window.fetch = async function (...args) {
       }
     } else if (url.includes('/check') && json?.state === 'SUCCESS') {
       // REST 폴링: /submissions/detail/{id}/check/
-      if (json.status_msg === 'Accepted') {
+      //
+      // "Run"(테스트 실행)도 같은 check 엔드포인트를 폴링하고 status_msg 로
+      // Accepted 를 돌려준다. 그런데 그 응답에는 채점 백분위가 없어 0% 로
+      // 기록되고, 몇 초 뒤 도착하는 진짜 제출은 내용이 같아 "변경 없음" 으로
+      // 건너뛰어진다. 결국 Run 을 한 번이라도 누르면 실행시간과 백분위가
+      // 영영 0 으로 남는다. 채점 결과만 받아들인다.
+      const isRunCode =
+        String(json.task_name || '').includes('RunCode') ||
+        Array.isArray(json.code_answer);
+
+      if (!isRunCode && json.status_msg === 'Accepted') {
         postSubmission({
           lang: json.lang || 'java',
           code: readEditorCode(),
