@@ -3,6 +3,12 @@
   "name": "LeetCode Helper",
   "version": "1.0.0",
   "description": "Automatically push LeetCode solutions to GitHub",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": ["storage"],
   "host_permissions": [
     "https://leetcode.com/*",
@@ -31,6 +37,12 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "LeetCode Helper"
+    "default_title": "LeetCode Helper",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   }
 }
