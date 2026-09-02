@@ -11,7 +11,7 @@
 
 // OAuth App의 Client ID. 공개되어도 무방한 값이다.
 // 등록 방법은 docs/github-oauth-app.md 참고.
-const GITHUB_CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID';
+const GITHUB_CLIENT_ID = 'Ov23liPmhbepTEy7qp01';
 
 const DEVICE_CODE_URL = 'https://github.com/login/device/code';
 const TOKEN_URL = 'https://github.com/login/oauth/access_token';
