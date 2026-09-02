@@ -2,8 +2,8 @@
 
 LeetCode 문제를 풀면 자동으로 GitHub에 push하는 Chrome 익스텐션입니다.
 
-- 문제 페이지 접속 시 → `UnSolved/` 에 문제 파일 생성
-- 정답 제출(Accepted) 시 → `Solved/` 에 풀이 + Groq AI 한국어 코드 리뷰 저장
+정답(Accepted) 판정을 받는 순간, 난이도별로 정리된 폴더에 문제 설명 · 제출한 풀이 ·
+AI 한국어 코드 리뷰 3개 파일을 커밋합니다.
 
 ## 설치
 
@@ -35,35 +35,41 @@ LeetCode 문제를 풀면 자동으로 GitHub에 push하는 Chrome 익스텐션�
 
 ```
 {basePath}/
-├── UnSolved/
-│   └── 0001-two-sum/
-│       ├── problem.md
-│       └── Solution.java
 └── Solved/
-    └── 0001-two-sum/
-        ├── problem.md
-        ├── Solution.java
-        └── analysis.md
+    ├── Easy/
+    │   └── 0001-two-sum/
+    │       ├── problem.md      # 문제 설명 (front matter + 본문)
+    │       ├── Solution.java   # 제출한 풀이
+    │       └── analysis.md     # 실행시간/메모리 + AI 코드 리뷰
+    ├── Med/
+    └── Hard/
 ```
+
+난이도 폴더명은 `Easy` / `Med` / `Hard` 이며 `background/background.js`의
+`DIFFICULTY_FOLDER` 상수에서 바꿀 수 있습니다.
 
 ## 동작 흐름
 
 ```
-문제 페이지 접속
-  → UnSolved/{id}-{slug}/ 에 problem.md + Solution.{ext} 생성 (이미 있으면 스킵)
+LeetCode 문제 페이지 진입
+  → main-world.js 가 GraphQL 응답을 가로채 문제 메타데이터를 캐시
 
-정답 제출 (Accepted)
-  → Groq llama-3.3-70b 로 한국어 코드 리뷰 생성
-  → Solved/{id}-{slug}/ 에 3개 파일 생성
-  → UnSolved/{id}-{slug}/ 삭제
+정답 제출 (Accepted 판정)
+  → Groq 로 한국어 코드 리뷰 생성
+  → Solved/{난이도}/{id}-{slug}/ 에 problem.md · Solution.{ext} · analysis.md 커밋
 ```
+
+- 내용이 기존 파일과 같으면 PUT을 건너뛰어 **빈 커밋을 만들지 않습니다.**
+- `analysis.md`는 매번 내용이 달라지므로, 풀이가 실제로 바뀌었거나 이전 분석이
+  실패했을 때만 재생성합니다.
+- Groq API Key가 비어 있으면 리뷰 없이 나머지 2개 파일만 커밋합니다.
 
 ## 기술 스택
 
 - Chrome Extension Manifest V3
 - Vanilla JavaScript (ES2022+, 번들러 없음)
 - GitHub Contents API REST v3
-- Groq API (`llama-3.3-70b-versatile`)
+- Groq API (`openai/gpt-oss-120b` — 모델 ID는 `GROQ_MODEL` 상수 한 곳에서 관리)
 
 ## 배포
 
