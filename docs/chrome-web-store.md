@@ -87,6 +87,14 @@ Java, Python, JavaScript, TypeScript, C, C++, C#, Go, Ruby, Swift, Kotlin, Scala
 아래 스크립트를 돌리면 비율을 유지한 채 여백을 채워 규격에 맞춰 준다.
 (잘라내지 않는다 — UI 가 잘리면 심사에 불리하다.)
 
+Win+Shift+S 로 캡처하면 클립보드에만 들어간다. 파일로 떨구려면:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/grab-clip.ps1 shot1
+```
+
+`dist/store/raw/shot1.png` 로 저장된다. 그다음 규격에 맞춘다.
+
 ```powershell
 # 규격만 맞추기
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 shot1.png shot2.png
