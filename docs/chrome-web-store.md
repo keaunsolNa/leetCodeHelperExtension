@@ -35,9 +35,10 @@ https://github.com/keaunsolNa/leetCodeHelperExtension/blob/master/PRIVACY.md
 LeetCode Helper
 ```
 
-**요약 / Short description** (132자 이내)
+**요약 / Short description** — 콘솔에서 수정 불가. `manifest.json` 의 `description`
+값을 그대로 가져오므로, 바꾸려면 manifest 를 고치고 패키지를 다시 올려야 한다.
 ```
-LeetCode 문제 풀이를 본인 GitHub 레포에 자동으로 저장하고 AI 코드 리뷰를 함께 남깁니다.
+LeetCode 정답을 맞히면 풀이와 AI 코드 리뷰를 GitHub에 자동으로 커밋합니다
 ```
 
 **상세 설명 / Detailed description**
@@ -139,29 +140,27 @@ Saves the user's own LeetCode submissions, along with an AI-generated code revie
 
 **권한 사용 사유 (Permission justification)**
 
-`storage`
+콘솔은 호스트마다 칸을 나누지 않고 **`storage` 칸 하나 + 호스트 권한 칸 하나**로 받는다.
+호스트 권한은 자세한 검토 대상이라, 선언한 호스트 네 개를 한 칸에 모두 설명해야 한다.
+
+`storage 사용 근거`
 ```
 Stores the user-provided GitHub Personal Access Token, GitHub username, target repository name, base path, and Groq API key so the user does not have to re-enter them on every submission. Also caches the status of the last operation so the popup can display it. No other data is stored.
 ```
 
-`https://leetcode.com/*` (host permission + content script)
+`호스트 권한 사용 근거` (985자, 제한 1,000자)
 ```
-The content script runs only on LeetCode problem pages. It reads the problem metadata (title, number, difficulty, description) and the code of the user's own accepted submission, which are the exact contents that need to be written to the user's GitHub repository. Nothing is read from any other site.
-```
+This extension declares four host permissions, each required for its single purpose:
 
-`https://api.github.com/*`
-```
-Required to create and update the solution files in the GitHub repository that the user configured, using the user's own Personal Access Token via the GitHub Contents API.
-```
+1) https://leetcode.com/* - The content script runs only on LeetCode problem pages. It reads the problem metadata (title, number, difficulty, description) and the code of the user's own accepted submission. These are the exact contents written to the user's repository.
 
-`https://github.com/login/*`
-```
-Required for the GitHub OAuth device flow, which lets the user authorize the extension without creating and pasting a Personal Access Token by hand. Only the device-code and access-token endpoints are called, using a public client ID. No client secret is used and no server is involved.
-```
+2) https://api.github.com/* - Creates and updates those files in the GitHub repository the user configured, using the user's own credentials.
 
-`https://api.groq.com/*`
-```
-Required to generate the Korean-language code review that is saved as analysis.md. The problem description and the user's submitted code are sent to the Groq API using the user's own API key. This feature is optional: if the user leaves the API key empty, no request is ever made to Groq and the extension still saves the problem and solution files.
+3) https://github.com/login/* - GitHub OAuth device flow, so the user can authorize the extension instead of creating and pasting a Personal Access Token by hand. Only the device-code and access-token endpoints are called, with a public client ID and no client secret.
+
+4) https://api.groq.com/* - Optional AI code review saved as analysis.md, using the user's own API key. If the key is empty, no request is ever made.
+
+The developer operates no server; no data is sent anywhere else.
 ```
 
 **원격 코드 사용 (Remote code)**: `아니요, 원격 코드를 사용하지 않습니다`
