@@ -13,6 +13,7 @@
 | 개인정보처리방침 URL 확보 | `PRIVACY.md`를 push 후 아래 URL 사용 |
 | 스크린샷 1장 이상 | 1280×800 (또는 640×400) PNG/JPEG |
 | 배포용 zip 생성 | `powershell -File tools/package.ps1` |
+| OAuth App 등록 + Client ID 반영 | [`docs/github-oauth-app.md`](github-oauth-app.md) — 완료 |
 
 **개인정보처리방침 URL (그대로 사용 가능):**
 
@@ -76,8 +77,18 @@ Java, Python, JavaScript, TypeScript, C, C++, C#, Go, Ruby, Swift, Kotlin, Scala
 2. 옵션 설정 화면
 3. GitHub 레포의 `Solved/0001-two-sum/` 폴더 (problem.md / Solution.java / analysis.md)
 
-> 1280×800으로 캡처하기 어렵다면 640×400도 허용된다. 캡처 시 **GitHub 토큰과
-> Groq 키가 화면에 노출되지 않도록** 반드시 가리고 찍을 것.
+스토어는 **1280×800 또는 640×400** 두 크기만 받는다. 아무 크기로 캡처한 뒤
+아래 스크립트를 돌리면 비율을 유지한 채 여백을 채워 규격에 맞춰 준다.
+(잘라내지 않는다 — UI 가 잘리면 심사에 불리하다.)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 shot1.png shot2.png
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/fit-screenshot.ps1 shot.png -Background '#1e1e1e'
+```
+
+결과는 `dist/store/` 에 저장된다.
+
+> ⚠️ 캡처할 때 **GitHub 토큰과 Groq 키가 화면에 노출되지 않도록** 반드시 가릴 것.
 
 ---
 
@@ -139,11 +150,18 @@ Required to generate the Korean-language code review that is saved as analysis.m
 
 | 항목 | 선택 |
 |---|---|
-| 공개 상태 | **미등록(Unlisted)** — 검색에 노출되지 않고 링크로만 설치 |
+| 공개 상태 | **공개(Public)** — 검색에 노출됨 |
 | 지역 | 전체 또는 대한민국 |
 | 가격 | 무료 |
 
-Unlisted로 올려도 자동 업데이트와 `chrome.storage.sync` 동기화는 동일하게 동작한다.
+리뷰 문구와 UI 가 한국어라 사실상 국내 사용자가 대상이다. 지역을 좁힐 필요는 없고,
+검색으로 유입되게 두는 편이 낫다.
+
+> 먼저 조용히 써 보고 싶다면 **미등록(Unlisted)** 으로 올려도 된다. 링크로만 설치되고
+> 검색에는 안 뜬다. 나중에 Distribution 탭에서 공개 상태만 바꾸면 **같은 아이템 ID,
+> 같은 설치 링크, 기존 설치자 그대로** 공개로 전환된다.
+
+어느 쪽이든 자동 업데이트와 `chrome.storage.sync` 동기화는 동일하게 동작한다.
 새 PC에서는 설치 링크 하나만 열면 되고, 같은 구글 계정이면 옵션 값까지 그대로 따라온다.
 
 ---
