@@ -92,18 +92,6 @@ LeetCode 문제 페이지 진입
 - Groq API — 모델이 폐기되면 `/models`로 살아 있는 모델을 찾아 자동 전환
 - GitHub OAuth Device Flow (client secret 불필요 → 서버 없음)
 
-## 배포
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/package.ps1
-```
-
-`dist/leetcode-helper-v{version}.zip` 이 만들어진다. 스토어 심사 폼에 넣을 문구와
-체크리스트는 [`docs/chrome-web-store.md`](docs/chrome-web-store.md) 참고.
-
-버전을 올릴 때는 `manifest.json`의 `version`을 먼저 수정해야 한다. 스토어는 동일한
-버전 번호의 재업로드를 거부한다.
-
 ## 개인정보
 
 개발자가 운영하는 서버는 없다. 자세한 내용은 [`PRIVACY.md`](PRIVACY.md) 참고.
