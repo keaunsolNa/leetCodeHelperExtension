@@ -10,7 +10,7 @@
 // MV3 서비스 워커는 유휴 30초면 종료되지만 옵션 페이지는 사용자가 닫을 때까지 살아있다.
 
 // OAuth App의 Client ID. 공개되어도 무방한 값이다.
-// 등록 방법은 docs/github-oauth-app.md 참고.
+// 등록 방법은 README의 "포크해서 배포하기" 참고. Device Flow를 켜야 동작한다.
 const GITHUB_CLIENT_ID = 'Ov23liPmhbepTEy7qp01';
 
 const DEVICE_CODE_URL = 'https://github.com/login/device/code';

@@ -48,8 +48,8 @@ GitHub 창에 입력하고 승인하면 끝이고, 토큰을 직접 만들 필�
 `analysis.md`에 복잡도 분석과 개선 제안이 함께 저장됩니다. **비워두면 리뷰 없이**
 문제 설명과 풀이 파일만 커밋합니다.
 
-> 포크해서 직접 배포하려면 OAuth Client ID를 채워야 합니다 —
-> [`docs/github-oauth-app.md`](docs/github-oauth-app.md) 참고.
+> 포크해서 직접 배포하려면 OAuth Client ID를 직접 채워야 합니다 —
+> 아래 [포크해서 배포하기](#포크해서-배포하기) 참고.
 
 ## GitHub 레포 구조
 
@@ -91,6 +91,22 @@ LeetCode 문제 페이지 진입
 - GitHub Contents API REST v3
 - Groq API — 모델이 폐기되면 `/models`로 살아 있는 모델을 찾아 자동 전환
 - GitHub OAuth Device Flow (client secret 불필요 → 서버 없음)
+
+## 포크해서 배포하기
+
+이 저장소를 포크해 직접 빌드하면 OAuth Client ID가 비어 있어 **"GitHub 계정으로 연결"**
+버튼이 숨겨지고 토큰 직접 입력으로 폴백합니다. 버튼을 살리려면 OAuth App을 직접 등록하세요.
+
+1. <https://github.com/settings/developers> → **OAuth Apps** → **New OAuth App**
+   Homepage URL과 Authorization callback URL은 입력이 필수지만 Device Flow에서는 쓰이지
+   않습니다. 저장소 주소를 넣어 두면 무난합니다.
+2. 등록 직후 앱 설정에서 **Enable Device Flow** 체크 → **Update application**.
+   ⚠️ 이걸 빼먹으면 연결할 때 `OAuth App에 Device Flow가 켜져 있지 않습니다` 오류가 납니다.
+3. 화면 상단의 **Client ID**(`Ov23li...`)를 `options/github-auth.js`의
+   `GITHUB_CLIENT_ID` 상수에 붙여넣습니다.
+
+Client ID는 **공개되어도 되는 값**이라 확장 패키지에 그대로 들어가고 커밋해도 됩니다.
+반면 **client secret은 만들 필요가 없습니다** — Device Flow는 secret을 쓰지 않습니다.
 
 ## 개인정보
 
