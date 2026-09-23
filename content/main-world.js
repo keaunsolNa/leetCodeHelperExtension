@@ -48,7 +48,7 @@ window.fetch = async function (...args) {
           });
         }
       }
-    } else if (url.includes('/check') && json?.state === 'SUCCESS') {
+    } else if (url.includes('/submissions/detail/') && json?.state === 'SUCCESS') {
       // REST 폴링: /submissions/detail/{id}/check/
       //
       // "Run"(테스트 실행)도 같은 check 엔드포인트를 폴링하고 status_msg 로
